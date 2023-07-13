@@ -1,0 +1,10 @@
+version: "1"
+
+services:
+  app:
+    container_name: invoicy-frontend
+    image: gaganagarwal77/invoicy-frontend
+    build:
+      context: .
+    ports:
+      - 3000:3000

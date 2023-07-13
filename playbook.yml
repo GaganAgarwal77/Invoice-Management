@@ -1,0 +1,42 @@
+- name: Deployment on K8 cluster
+  hosts: host_machine
+  vars:
+    env_path: "/Users/divyam/Semester 8/SPE/MajorProject/Invoicy-backend/backend/invoicy/.env.prod"
+  tasks:
+
+    - name: Check Minikube status
+      command: minikube status
+      register: minikube_status
+      changed_when: false
+      failed_when: false
+
+    - name: Start Minikube
+      become: false
+      command: minikube start
+      when: "'Running' not in minikube_status.stdout"
+
+    - name: Setting Config and Secrets
+      shell: |
+        kubectl delete secrets invoicy-backend-prod-env
+        kubectl create secret generic invoicy-backend-prod-env --from-env-file="{{ env_path }}"
+      ignore_errors: true
+
+    - name: Applying K8s Command in Repository
+      shell: |
+        cd ./k8s/
+        kubectl delete -f .
+        kubectl apply -f .
+      changed_when: false
+      failed_when: false
+
+    # - name: Wait for pod to become ready
+    #   shell: kubectl wait --for=condition=Ready pod -l app=invoicy-backend-deployment
+    #   register: wait_result
+    #   until: wait_result.rc == 0
+    #   retries: 10
+    #   delay: 10
+
+    # - name: Applying migrations
+    #   shell: |
+    #     kubectl exec -it $(kubectl get pod -l app=invoicy-backend-deployment -o jsonpath="{.items[0].metadata.name}") -- bash /app/migrate.sh
+    #   when: wait_result.rc == 0
